@@ -32,6 +32,9 @@ class RegisterActivity : AppCompatActivity() {
                 binding.progressBar
             )
         }
+        binding.backToLoginPage.setOnClickListener {
+            finish()
+        }
     }
 
     private fun registerToApp(

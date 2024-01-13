@@ -34,7 +34,8 @@ class ListAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.deleteBtn.visibility = View.GONE
-        val pillInfo = pillDetails[position]
+        var sortByTime = pillDetails.sortedBy { it.whenYouTook }
+        val pillInfo = sortByTime[position]
         holder.pillName.text = pillInfo.drugName
         holder.noteText.text = pillInfo.note
         holder.takenTime.text = pillInfo.whenYouTook.hours.toString() + ":" + pillInfo.whenYouTook.minutes

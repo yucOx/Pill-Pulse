@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.yucox.pillpulse.R
 import com.yucox.pillpulse.databinding.ReminderItemBinding
 import com.yucox.pillpulse.model.AlarmInfo
 import com.yucox.pillpulse.model.BroadcastReceiver
@@ -42,27 +43,33 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
         holder.binding.time.setText(calendar.get(Calendar.HOUR).toString() + ":" + calendar.get(Calendar.MINUTE))
         holder.binding.pillNameItemTv.setText(alarmInfo.pillName)
         holder.binding.pillInfoItemTv.setText(alarmInfo.info)
-        if(alarmInfo.repeating == 0){
-        }else{
-            openTheAlarm(alarmInfo)
-        }
+
         if(alarmInfo.onOrOff.equals(0)){
-            holder.binding.checkBox.setText("Kapalı")
+            holder.binding.openorclosetext.setText("Kapalı")
+            holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatnormal)
+            holder.binding.checkBox.setImageResource(R.drawable.checkboxoff_40x20)
         }else{
-            holder.binding.checkBox.setText("Açık")
-            holder.binding.checkBox.isChecked = true
+            holder.binding.openorclosetext.setText("Açık")
+            holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatfocus)
+            holder.binding.checkBox.setImageResource(R.drawable.checkbox_on40x20)
         }
-        holder.binding.checkBox.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener{
-            override fun onCheckedChanged(p0: CompoundButton?, p1: Boolean) {
-                if(p1 == true){
-                    openTheAlarm(alarmInfo)
-                    holder.binding.checkBox.setText("Açık")
-                }else{
-                    closeTheAlarm(alarmInfo)
-                    holder.binding.checkBox.setText("Kapalı")
-                }
+        holder.binding.checkBox.setOnClickListener {
+            if(alarmInfo.onOrOff == 0) {
+                holder.binding.openorclosetext.setText("Açık")
+                holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatfocus)
+                holder.binding.checkBox.setImageResource(R.drawable.checkbox_on40x20)
+                openTheAlarm(alarmInfo)
+            }else{
+                holder.binding.openorclosetext.setText("Kapalı")
+                holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatnormal)
+                holder.binding.checkBox.setImageResource(R.drawable.checkboxoff_40x20)
+                closeTheAlarm(alarmInfo)
             }
-        })
+        }
+        holder.binding.frameItemConst.setOnClickListener {
+            if(holder.binding.deleteItemBtn.visibility == View.GONE)
+                Toast.makeText(context,"Düzenlemek için basılı tut",Toast.LENGTH_LONG).show()
+        }
 
         holder.binding.frameItemConst.setOnLongClickListener(object : View.OnLongClickListener{
             override fun onLongClick(p0: View?): Boolean {
@@ -96,6 +103,7 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
     private fun closeTheAlarm(alarmInfo: AlarmInfo) {
         var ref = database.child(alarmInfo.alarmLocation.toString()).child("onOrOff")
         ref.setValue(0)
+        alarmInfo.onOrOff = 0
         alarmManager = context.getSystemService(AppCompatActivity.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context.applicationContext, BroadcastReceiver::class.java)
         intent.putExtra("alarmInfo",alarmInfo)
@@ -107,6 +115,7 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
     private fun openTheAlarm(alarmInfo : AlarmInfo) {
         var ref = database.child(alarmInfo.alarmLocation.toString()).child("onOrOff")
         ref.setValue(1)
+        alarmInfo.onOrOff = 1
         var calendar2 = Calendar.getInstance()
         if (calendar2.timeInMillis <= System.currentTimeMillis()) {
             // Zaman geçmişse, bir sonraki günü belirleyin
@@ -123,7 +132,7 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
         var pendingIntent = PendingIntent.getBroadcast(context.applicationContext,alarmInfo.requestCode,intent,
             PendingIntent.FLAG_IMMUTABLE)
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,calendar2.timeInMillis, AlarmManager.INTERVAL_DAY,pendingIntent)
-        Toast.makeText(context,"Hatırlatıcı oluşturuldu", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context,"Hatırlatıcı aktif edildi", Toast.LENGTH_SHORT).show()
     }
 
     class ViewHolder(val binding : ReminderItemBinding) : RecyclerView.ViewHolder(binding.root) {

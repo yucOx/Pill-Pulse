@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".activity.CreateAlarm">
 
+
     <EditText
         android:id="@+id/pill_note_et"
         android:layout_width="327dp"

@@ -16,6 +16,7 @@ import com.google.firebase.database.ValueEventListener
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.adapter.AvatarAdapter
 import com.yucox.pillpulse.databinding.ActivityMainBinding
+import com.yucox.pillpulse.model.OpenAlarmOnRestart
 import com.yucox.pillpulse.model.PillTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,12 +34,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.avatarRecyclerView.visibility = View.GONE
+        //binding.avatarRecyclerView.visibility = View.GONE
 
         setWelcomeMessage()
         var avatarPhotos = ArrayList<Int>()
-        setAvatarPhotos(avatarPhotos)
-        selectAvatar()
+        //setAvatarPhotos(avatarPhotos)
+        //selectAvatar()
         getData(reference,pillDetails,auth.currentUser?.email.toString())
 
         binding.addRemindenBtn.setOnClickListener {
@@ -49,6 +50,16 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, AddTimeActivity::class.java)
             startActivity(intent)
         }
+        binding.logoutBtn.setOnClickListener {
+            logOut()
+        }
+    }
+
+    private fun logOut() {
+        auth.signOut()
+        val intent = Intent(this,LoginActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     private fun setWelcomeMessage() {
@@ -70,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun selectAvatar() {
+    /*private fun selectAvatar() {
         binding.avatarPhoto.setOnClickListener {
             if(binding.avatarRecyclerView.visibility == View.VISIBLE){
                 binding.avatarRecyclerView.visibility = View.GONE
@@ -78,8 +89,8 @@ class MainActivity : AppCompatActivity() {
                 binding.avatarRecyclerView.visibility = View.VISIBLE
             }
         }
-    }
-
+    }*/
+    /*
     private fun initSelectAvatarRecycler(
         avatarPhotos: ArrayList<Int>,
         avatarRecyclerView: RecyclerView
@@ -87,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         var adapter = AvatarAdapter(this@MainActivity,avatarPhotos)
         avatarRecyclerView.adapter = adapter
         avatarRecyclerView.layoutManager = LinearLayoutManager(this,RecyclerView.HORIZONTAL,false)
-    }
+    }*/
 
     private fun initRecycler(listPillsRecycler: RecyclerView, pillDetails: ArrayList<PillTime>) {
         var adapter = ListAdapter(this,pillDetails,reference)
@@ -136,7 +147,7 @@ class MainActivity : AppCompatActivity() {
         avatarPhotos.add(R.drawable.avatar9)
         avatarPhotos.add(R.drawable.avatar10)
         avatarPhotos.add(R.drawable.avatar11)
-        initSelectAvatarRecycler(avatarPhotos,binding.avatarRecyclerView)
+        //initSelectAvatarRecycler(avatarPhotos,binding.avatarRecyclerView)
     }
 
     override fun onRestart() {

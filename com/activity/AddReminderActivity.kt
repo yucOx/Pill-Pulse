@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -13,6 +14,7 @@ import com.google.firebase.database.ValueEventListener
 import com.yucox.pillpulse.adapter.ReminderAdapter
 import com.yucox.pillpulse.databinding.AddReminderActivityBinding
 import com.yucox.pillpulse.model.AlarmInfo
+import com.yucox.pillpulse.model.OpenAlarmOnRestart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,6 +33,15 @@ class AddReminderActivity : AppCompatActivity() {
 
         setListeners()
         getData()
+        initBannerAd()
+    }
+
+    private fun initBannerAd() {
+        MobileAds.initialize(this) {}
+
+        mAdView = findViewById(R.id.adView)
+        val adRequest = AdRequest.Builder().build()
+        mAdView.loadAd(adRequest)
     }
 
     private fun setAdapter() {

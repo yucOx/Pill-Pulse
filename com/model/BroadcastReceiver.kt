@@ -28,12 +28,12 @@ class BroadcastReceiver : BroadcastReceiver() {
         var mp : MediaPlayer
         mp =  MediaPlayer.create(p0, R.raw.alarm_sound)
         mp.start()
-        println("burada")
         //cancelAlarmAndSetAgain(p0,alarmInfo)
 
         val notificationIntent = Intent(p0, AlarmOnActivity::class.java)
         notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         val requestCode = System.currentTimeMillis().toInt()
+        notificationIntent.putExtra("alarmInfo",alarmInfo)
         val pendingIntent = PendingIntent.getActivity(
             p0, requestCode, notificationIntent, PendingIntent.FLAG_IMMUTABLE
         )

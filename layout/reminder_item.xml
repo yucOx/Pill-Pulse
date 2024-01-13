@@ -80,14 +80,26 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/deletebutton" />
 
-        <CheckBox
+        <ImageView
             android:id="@+id/checkBox"
-            android:layout_width="wrap_content"
-            android:layout_height="35dp"
+            android:layout_width="40dp"
+            android:layout_height="20dp"
             android:layout_marginStart="20dp"
-            android:layout_marginBottom="20dp"
-            android:text="Kapalı"
+            android:layout_marginBottom="27dp"
+            android:src="@drawable/checkbox_on40x20"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/openorclosetext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:text="TextView"
+            android:textSize="10sp"
+            app:layout_constraintBottom_toBottomOf="@+id/checkBox"
+            app:layout_constraintStart_toEndOf="@+id/checkBox"
+            app:layout_constraintTop_toTopOf="@+id/checkBox" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
