@@ -3,14 +3,18 @@ package com.yucox.pillpulse.activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.yucox.pillpulse.R
 import com.yucox.pillpulse.adapter.ReminderAdapter
 import com.yucox.pillpulse.databinding.AddReminderActivityBinding
 import com.yucox.pillpulse.model.AlarmInfo
@@ -26,6 +30,7 @@ class AddReminderActivity : AppCompatActivity() {
     private var ref = database.getReference("Alarms")
     private var alarmInfos = ArrayList<AlarmInfo>()
     private lateinit var listAlarmAdapter : ReminderAdapter
+    lateinit var mAdView : AdView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = AddReminderActivityBinding.inflate(layoutInflater)
@@ -34,11 +39,19 @@ class AddReminderActivity : AppCompatActivity() {
         setListeners()
         getData()
         initBannerAd()
+        pleaseOpenAgainInRestart()
+    }
+
+    private fun pleaseOpenAgainInRestart() {
+        var builder = AlertDialog.Builder(this@AddReminderActivity)
+        builder.setTitle("Önemli!!")
+            .setMessage("Lütfen cihazı açıp kapattığınızda hatırlatıcının düzgün çalışması için 'Hatırlatıcılar' sayfasını tekrar açın")
+            .setNegativeButton("Anladım"){dialog,which ->}
+            .show()
     }
 
     private fun initBannerAd() {
         MobileAds.initialize(this) {}
-
         mAdView = findViewById(R.id.adView)
         val adRequest = AdRequest.Builder().build()
         mAdView.loadAd(adRequest)
@@ -51,6 +64,7 @@ class AddReminderActivity : AppCompatActivity() {
     }
 
     private fun getData() {
+        var openAlarmOnRestart = OpenAlarmOnRestart(this)
         alarmInfos.clear()
         ref.addListenerForSingleValueEvent(object : ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -63,6 +77,9 @@ class AddReminderActivity : AppCompatActivity() {
                 }
                 CoroutineScope(Dispatchers.Main).launch {
                     setAdapter()
+                    for(alarmInfo in alarmInfos){
+                        openAlarmOnRestart.openTheAlarm(alarmInfo)
+                    }
                 }
             }
 

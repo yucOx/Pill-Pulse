@@ -38,9 +38,10 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.binding.deleteItemBtn.visibility = View.GONE
-        val alarmInfo = alarmInfos[position]
+        var sortedAlarmInfos = alarmInfos.sortedBy { it.alarmTime.hours}
+        val alarmInfo = sortedAlarmInfos[position]
         calendar.time = alarmInfo.alarmTime
-        holder.binding.time.setText(calendar.get(Calendar.HOUR).toString() + ":" + calendar.get(Calendar.MINUTE))
+        holder.binding.time.setText(calendar.get(Calendar.HOUR_OF_DAY).toString() + ":" + calendar.get(Calendar.MINUTE))
         holder.binding.pillNameItemTv.setText(alarmInfo.pillName)
         holder.binding.pillInfoItemTv.setText(alarmInfo.info)
 
@@ -88,9 +89,9 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
                 .setMessage("Bu işlem geri alınamaz")
                 .setNegativeButton("Evet"){
                     dialog,which ->
-                    var ref = database.child(alarmInfo.alarmLocation.toString())
-                    ref.removeValue().addOnSuccessListener {
-                        closeTheAlarm(alarmInfo)
+                    var ref = database.child(alarmInfo.alarmLocation.toString()).removeValue()
+                        .addOnSuccessListener {
+                        deleteAndCloseAlarm(alarmInfo)
                         alarmInfos.remove(alarmInfo)
                         notifyDataSetChanged()
                     }
@@ -98,6 +99,15 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
                 .setPositiveButton("Hayır"){dialog,which ->}
                 .show()
         }
+    }
+
+    private fun deleteAndCloseAlarm(alarmInfo: AlarmInfo){
+        alarmManager = context.getSystemService(AppCompatActivity.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context.applicationContext, BroadcastReceiver::class.java)
+        intent.putExtra("alarmInfo",alarmInfo)
+        var pendingIntent = PendingIntent.getBroadcast(context.applicationContext,alarmInfo.requestCode,intent,
+            PendingIntent.FLAG_IMMUTABLE)
+        alarmManager.cancel(pendingIntent)
     }
 
     private fun closeTheAlarm(alarmInfo: AlarmInfo) {
@@ -117,12 +127,11 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
         ref.setValue(1)
         alarmInfo.onOrOff = 1
         var calendar2 = Calendar.getInstance()
-        if (calendar2.timeInMillis <= System.currentTimeMillis()) {
-            // Zaman geçmişse, bir sonraki günü belirleyin
-            calendar2.add(Calendar.DAY_OF_YEAR, 1)
-        }
         calendar2.set(Calendar.HOUR_OF_DAY,alarmInfo.alarmTime.hours)
         calendar2.set(Calendar.MINUTE,alarmInfo.alarmTime.minutes)
+        if (calendar2.timeInMillis <= System.currentTimeMillis()) {
+            calendar2.add(Calendar.DAY_OF_YEAR, 1)
+        }
         println(alarmInfo.alarmTime)
         println(calendar2.get(Calendar.HOUR))
         println(calendar2.get(Calendar.MINUTE))

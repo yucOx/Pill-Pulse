@@ -34,6 +34,7 @@ class BroadcastReceiver : BroadcastReceiver() {
         notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         val requestCode = System.currentTimeMillis().toInt()
         notificationIntent.putExtra("alarmInfo",alarmInfo)
+        notificationIntent.putExtra("mpUri",mp.toString())
         val pendingIntent = PendingIntent.getActivity(
             p0, requestCode, notificationIntent, PendingIntent.FLAG_IMMUTABLE
         )

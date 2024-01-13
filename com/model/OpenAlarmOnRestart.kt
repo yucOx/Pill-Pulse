@@ -23,15 +23,11 @@ class OpenAlarmOnRestart (var context: Context) {
 
     fun openTheAlarm(alarmInfo : AlarmInfo) {
         var calendar2 = Calendar.getInstance()
-        if (calendar2.timeInMillis <= System.currentTimeMillis()) {
-            // Zaman geçmişse, bir sonraki günü belirleyin
-            calendar2.add(Calendar.DAY_OF_YEAR, 1)
-        }
         calendar2.set(Calendar.HOUR_OF_DAY,alarmInfo.alarmTime.hours)
         calendar2.set(Calendar.MINUTE,alarmInfo.alarmTime.minutes)
-        println(alarmInfo.alarmTime)
-        println(calendar2.get(Calendar.HOUR))
-        println(calendar2.get(Calendar.MINUTE))
+        if (calendar2.timeInMillis <= System.currentTimeMillis()) {
+            calendar2.add(Calendar.DAY_OF_YEAR, 1)
+        }
         alarmManager = context.getSystemService(AppCompatActivity.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context.applicationContext, BroadcastReceiver::class.java)
         intent.putExtra("alarmInfo",alarmInfo)

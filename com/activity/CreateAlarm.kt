@@ -149,6 +149,7 @@ class CreateAlarm : AppCompatActivity() {
         picker.addOnPositiveButtonClickListener {
             calendar[Calendar.HOUR_OF_DAY] = picker.hour
             calendar[Calendar.MINUTE] = picker.minute
+            Toast.makeText(this@CreateAlarm,calendar.get(Calendar.HOUR_OF_DAY).toString() + ":" + calendar.get(Calendar.MINUTE) + " Seçildi",Toast.LENGTH_LONG).show()
         }
     }
 }

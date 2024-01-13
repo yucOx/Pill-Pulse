@@ -5,6 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.yucox.pillpulse.R
@@ -21,6 +24,8 @@ class AddTimeActivity : AppCompatActivity() {
     private lateinit var binding: AddTimeActivityBinding
     private var database = FirebaseDatabase.getInstance()
     private var auth = FirebaseAuth.getInstance()
+    lateinit var mAdView : AdView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = AddTimeActivityBinding.inflate(layoutInflater)
@@ -30,6 +35,14 @@ class AddTimeActivity : AppCompatActivity() {
         save()
 
         backToPrevious()
+        initBannerAd(binding.adView)
+    }
+
+    private fun initBannerAd(adView: AdView) {
+        MobileAds.initialize(this) {}
+        mAdView = adView
+        val adRequest = AdRequest.Builder().build()
+        mAdView.loadAd(adRequest)
     }
 
     private fun save() {

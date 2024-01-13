@@ -1,9 +1,12 @@
 package com.yucox.pillpulse.activity
 
 import android.content.Intent
+import android.media.MediaPlayer
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.google.firebase.database.FirebaseDatabase
+import com.yucox.pillpulse.R
 import com.yucox.pillpulse.databinding.ActivityAlarmOnBinding
 import com.yucox.pillpulse.model.AlarmInfo
 import com.yucox.pillpulse.model.PillTime
@@ -30,6 +33,15 @@ class AlarmOnActivity : AppCompatActivity() {
 
     private fun updateIntentData() {
         var alarmInfo = intent.getSerializableExtra("alarmInfo") as AlarmInfo
+        var mpUriString = intent.getSerializableExtra("mp")
+        var mpUri : Uri
+        var mp : MediaPlayer
+        if(mpUriString != null){
+            mpUri = Uri.parse(mpUriString.toString())
+            mp = MediaPlayer.create(this.applicationContext,mpUri)
+            mp.stop()
+        }
+
         var calendar = Calendar.getInstance()
         calendar.time = alarmInfo.alarmTime
         binding.showTimeTv.text =
