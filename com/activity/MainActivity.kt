@@ -20,6 +20,7 @@ import com.yucox.pillpulse.model.PillTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
@@ -40,8 +41,9 @@ class MainActivity : AppCompatActivity() {
         selectAvatar()
         getData(reference,pillDetails,auth.currentUser?.email.toString())
 
-        binding.reminderBtn.setOnClickListener {
-
+        binding.addRemindenBtn.setOnClickListener {
+            val intent = Intent(this@MainActivity,AddReminderActivity::class.java)
+            startActivity(intent)
         }
         binding.addTimeBtn.setOnClickListener {
             val intent = Intent(this, AddTimeActivity::class.java)
@@ -108,6 +110,10 @@ class MainActivity : AppCompatActivity() {
                             pillDetails.add(snap.getValue(PillTime::class.java)!!)
                         }
                     }
+                }else{
+                    pillDetails.add(
+                        PillTime("Selam!","Buraya ilacını aldığın saati ve notlarını kaydedebilirsin", Date(),auth.currentUser?.email.toString(),""
+                        ))
                 }
                 initRecycler(binding.listPillsRecycler,pillDetails)
             }
@@ -134,6 +140,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRestart() {
+        binding.progressBar2.visibility = View.VISIBLE
         getData(reference,pillDetails,auth.currentUser?.email.toString())
         super.onRestart()
     }

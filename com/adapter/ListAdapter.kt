@@ -13,6 +13,7 @@ import com.yucox.pillpulse.model.PillTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 
 class ListAdapter(
     var context: Context,
@@ -36,7 +37,10 @@ class ListAdapter(
         val pillInfo = pillDetails[position]
         holder.pillName.text = pillInfo.drugName
         holder.noteText.text = pillInfo.note
-        holder.takenTime.text = pillInfo.whenYouTook
+        holder.takenTime.text = pillInfo.whenYouTook.hours.toString() + ":" + pillInfo.whenYouTook.minutes
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy")
+        var formatedDate = dateFormat.format(pillInfo.whenYouTook)
+        holder.takenDate.text = formatedDate
 
         showDeleteBtn(holder.bg,holder.deleteBtn)
         deleteItem(holder.deleteBtn,pillInfo,pillDetails)
@@ -71,6 +75,7 @@ class ListAdapter(
     class ViewHolder(view: View):RecyclerView.ViewHolder(view){
         var pillName = view.findViewById<TextView>(R.id.pill_name_tv)
         var takenTime = view.findViewById<TextView>(R.id.taken_time_tv)
+        var takenDate = view.findViewById<TextView>(R.id.taken_date_tv)
         var noteText = view.findViewById<TextView>(R.id.note_tv)
         var bg = view.findViewById<ConstraintLayout>(R.id.constraintLayout)
         var deleteBtn = view.findViewById<ImageView>(R.id.deleteBtn)

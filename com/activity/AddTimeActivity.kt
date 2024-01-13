@@ -59,7 +59,7 @@ class AddTimeActivity : AppCompatActivity() {
         if (!pillName.isNullOrBlank()) {
             if (note.isBlank()) {
                 var pillTimeAndNote =
-                    PillTime(pillName, "Not almadınız.", formatedDate, userMail, key)
+                    PillTime(pillName, "Not almadınız.", getRealTime, userMail, key)
                 database.getReference("Pills").child(key).setValue(pillTimeAndNote)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
@@ -69,7 +69,7 @@ class AddTimeActivity : AppCompatActivity() {
                         }
                     }
             } else {
-                var pillTimeAndNote = PillTime(pillName, note, formatedDate, userMail, key)
+                var pillTimeAndNote = PillTime(pillName, note, getRealTime, userMail, key)
                 database.getReference("Pills").child(key).setValue(pillTimeAndNote)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
