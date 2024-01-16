@@ -13,6 +13,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.getSystemService
+import com.google.firebase.database.FirebaseDatabase
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.activity.AlarmOnActivity
 import java.util.Calendar
@@ -20,8 +21,9 @@ import java.util.Calendar
 
 class BroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(p0: Context?, p1: Intent?) {
+        var database = FirebaseDatabase.getInstance()
         var alarmInfo = p1?.getSerializableExtra("alarmInfo") as AlarmInfo
-
+        var ref = database.getReference("Alarms").child(alarmInfo.alarmLocation.toString()).child("onOrOff")
 
         Toast.makeText(p0,"Alarm çalıyor",Toast.LENGTH_SHORT).show()
         createNotificationChannel(p0!!)
@@ -29,6 +31,13 @@ class BroadcastReceiver : BroadcastReceiver() {
         mp =  MediaPlayer.create(p0, R.raw.alarm_sound)
         mp.start()
         //cancelAlarmAndSetAgain(p0,alarmInfo)
+
+        var openAlarmOrClose = OpenAlarmOnRestart(p0.applicationContext)
+        if(alarmInfo.repeating == 0){
+            ref.setValue(0)
+            openAlarmOrClose.closeTheAlarm(alarmInfo)
+        }
+
 
         val notificationIntent = Intent(p0, AlarmOnActivity::class.java)
         notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

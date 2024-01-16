@@ -47,13 +47,31 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
 
         if(alarmInfo.onOrOff.equals(0)){
             holder.binding.openorclosetext.setText("Kapalı")
-            holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatnormal)
             holder.binding.checkBox.setImageResource(R.drawable.checkboxoff_40x20)
         }else{
             holder.binding.openorclosetext.setText("Açık")
-            holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatfocus)
             holder.binding.checkBox.setImageResource(R.drawable.checkbox_on40x20)
         }
+        if(alarmInfo.repeating == 0){
+            holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatnormal)
+        }
+        else if(alarmInfo.repeating == 1 && alarmInfo.onOrOff == 1){
+            holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatfocus)
+        }
+
+        holder.binding.repeatItemBtn.setOnClickListener {
+            var ref = database.child(alarmInfo.alarmLocation.toString()).child("repeating")
+            if(alarmInfo.repeating == 0){
+                alarmInfo.repeating = 1
+                holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatfocus)
+                ref.setValue(1)
+            }else{
+                alarmInfo.repeating = 0
+                holder.binding.repeatItemBtn.setImageResource(R.drawable.repeatnormal)
+                ref.setValue(0)
+            }
+        }
+
         holder.binding.checkBox.setOnClickListener {
             if(alarmInfo.onOrOff == 0) {
                 holder.binding.openorclosetext.setText("Açık")
@@ -81,7 +99,6 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
                 }
                 return true
             }
-
         })
         holder.binding.deleteItemBtn.setOnClickListener {
             var builder = AlertDialog.Builder(context)
