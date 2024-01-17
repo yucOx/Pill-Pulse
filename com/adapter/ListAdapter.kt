@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.database.DatabaseReference
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.model.PillTime
@@ -54,7 +55,7 @@ class ListAdapter(
         pillDetails: ArrayList<PillTime>
     ) {
         deleteBtn.setOnClickListener {
-            var builder = AlertDialog.Builder(context)
+            var builder = MaterialAlertDialogBuilder(context)
             builder.setTitle("Silmek istediğinize emin misiniz?")
                 .setMessage("Evet'e basarsanız bu işlem geri alınamaz.")
                 .setNegativeButton("Evet"){dialog,which ->

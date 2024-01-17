@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -43,7 +44,7 @@ class AddReminderActivity : AppCompatActivity() {
     }
 
     private fun pleaseOpenAgainInRestart() {
-        var builder = AlertDialog.Builder(this@AddReminderActivity)
+        var builder = MaterialAlertDialogBuilder(this@AddReminderActivity)
         builder.setTitle("Önemli!!")
             .setMessage("Lütfen cihazı açıp kapattığınızda hatırlatıcının düzgün çalışması için 'Hatırlatıcılar' sayfasını tekrar açın")
             .setNegativeButton("Anladım"){dialog,which ->}
@@ -78,7 +79,9 @@ class AddReminderActivity : AppCompatActivity() {
                 CoroutineScope(Dispatchers.Main).launch {
                     setAdapter()
                     for(alarmInfo in alarmInfos){
-                        openAlarmOnRestart.openTheAlarm(alarmInfo)
+                        if(alarmInfo.onOrOff == 1){
+                            openAlarmOnRestart.openTheAlarm(alarmInfo)
+                        }
                     }
                 }
             }

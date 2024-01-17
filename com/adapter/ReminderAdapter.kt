@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.yucox.pillpulse.R
@@ -101,7 +102,7 @@ class ReminderAdapter(var context: Context, var alarmInfos : ArrayList<AlarmInfo
             }
         })
         holder.binding.deleteItemBtn.setOnClickListener {
-            var builder = AlertDialog.Builder(context)
+            var builder = MaterialAlertDialogBuilder(context)
             builder.setTitle("Silmek istediğinze emin misiniz?")
                 .setMessage("Bu işlem geri alınamaz")
                 .setNegativeButton("Evet"){
