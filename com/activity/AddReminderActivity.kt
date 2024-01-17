@@ -3,13 +3,13 @@ package com.yucox.pillpulse.activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -37,18 +37,17 @@ class AddReminderActivity : AppCompatActivity() {
         binding = AddReminderActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        pleaseOpenAgainOnRestart()
         setListeners()
         getData()
         initBannerAd()
-        pleaseOpenAgainInRestart()
     }
 
-    private fun pleaseOpenAgainInRestart() {
-        var builder = MaterialAlertDialogBuilder(this@AddReminderActivity)
-        builder.setTitle("Önemli!!")
-            .setMessage("Lütfen cihazı açıp kapattığınızda hatırlatıcının düzgün çalışması için 'Hatırlatıcılar' sayfasını tekrar açın")
-            .setNegativeButton("Anladım"){dialog,which ->}
+    private fun pleaseOpenAgainOnRestart() {
+        val rootView = findViewById<View>(android.R.id.content)
+        Snackbar.make(rootView,"Lütfen cihazı açıp kapattığınızda, hatırlatıcının düzgün çalışması için bu sayfayı tekrar açın",Snackbar.LENGTH_LONG)
             .show()
+
     }
 
     private fun initBannerAd() {

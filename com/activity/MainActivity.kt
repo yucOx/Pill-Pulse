@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
 import android.view.View
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -109,6 +108,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.addTimeBtn.setOnClickListener {
             val intent = Intent(this, AddTimeActivity::class.java)
+            intent.putExtra("pillDetails",pillDetails)
             startActivity(intent)
         }
         binding.logoutBtn.setOnClickListener {

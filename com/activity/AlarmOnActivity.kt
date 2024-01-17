@@ -48,6 +48,9 @@ class AlarmOnActivity : AppCompatActivity() {
             calendar.get(Calendar.HOUR_OF_DAY).toString() + ":" + calendar.get(Calendar.MINUTE)
                 .toString()
         binding.noteTv.text = alarmInfo.pillName + "\n" + alarmInfo.info
+        var calendar2 = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_MONTH,calendar2.get(Calendar.DAY_OF_MONTH))
+        calendar.set(Calendar.MONTH,calendar2.get(Calendar.MONTH))
 
         binding.iTokeBtn.setOnClickListener {
             saveToData(alarmInfo)

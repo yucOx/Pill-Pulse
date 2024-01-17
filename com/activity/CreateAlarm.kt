@@ -5,13 +5,14 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
+import android.view.View
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.google.firebase.auth.FirebaseAuth
@@ -107,9 +108,12 @@ class CreateAlarm : AppCompatActivity() {
         if(repeat == 0){
             repeat = 1
             binding.repeatBtn.setImageResource(R.drawable.repeatfocus)
-            Toast.makeText(this@CreateAlarm,"Hatırlatıcı her gün tekrar edecek şekilde ayarlandı.",Toast.LENGTH_SHORT).show()
+            val rootView = findViewById<View>(android.R.id.content)
+            Snackbar.make(rootView,"Hatırlatıcı her gün tekrar edecek şekilde ayarlandı.",Snackbar.LENGTH_SHORT).show()
         }
         else{
+            val rootView = findViewById<View>(android.R.id.content)
+            Snackbar.make(rootView,"Hatırlatıcı tek sefer için ayarlandı.",Snackbar.LENGTH_SHORT).show()
             repeat = 0
             binding.repeatBtn.setImageResource(R.drawable.repeatnormal)
         }
@@ -119,9 +123,11 @@ class CreateAlarm : AppCompatActivity() {
         if(binding.pillNameEt.text.toString().isNullOrBlank() == false){
             if (calendar.timeInMillis <= System.currentTimeMillis()) {
                 calendar.add(Calendar.DAY_OF_YEAR, 1)
-                    Toast.makeText(this@CreateAlarm,"Hatırlatıcı yarın ve sonraki günler çalacak şekilde ayarlandı",Toast.LENGTH_LONG).show()
+                val rootView = findViewById<View>(android.R.id.content)
+                Snackbar.make(rootView,"Hatırlatıcı yarın ve sonraki günler çalacak şekilde ayarlandı",Snackbar.LENGTH_LONG).show()
             }else{
-                Toast.makeText(this@CreateAlarm,"Hatırlatıcı oluşturuldu", Toast.LENGTH_SHORT).show()
+                val rootView = findViewById<View>(android.R.id.content)
+                Snackbar.make(rootView,"Hatırlatıcı oluşturuldu", Snackbar.LENGTH_LONG).show()
             }
             val requestCode = System.currentTimeMillis().toInt()
             var ai : AlarmInfo = AlarmInfo(requestCode,binding.pillNameEt.text.toString(),binding.pillNoteEt.text.toString(),repeat,auth.currentUser?.email,key,calendar.time,1)
@@ -137,7 +143,8 @@ class CreateAlarm : AppCompatActivity() {
                     }
                 }
         } else {
-            Toast.makeText(this@CreateAlarm,"İlaç ismini giriniz",Toast.LENGTH_SHORT).show()
+            val rootView = findViewById<View>(android.R.id.content)
+            Snackbar.make(rootView,"İlaç ismini giriniz",Snackbar.LENGTH_SHORT).show()
         }
 
     }
@@ -149,7 +156,8 @@ class CreateAlarm : AppCompatActivity() {
         picker.addOnPositiveButtonClickListener {
             calendar[Calendar.HOUR_OF_DAY] = picker.hour
             calendar[Calendar.MINUTE] = picker.minute
-            Toast.makeText(this@CreateAlarm,calendar.get(Calendar.HOUR_OF_DAY).toString() + ":" + calendar.get(Calendar.MINUTE) + " Seçildi",Toast.LENGTH_LONG).show()
+            val rootView = findViewById<View>(android.R.id.content)
+            Snackbar.make(rootView,calendar.get(Calendar.HOUR_OF_DAY).toString() + ":" + calendar.get(Calendar.MINUTE) + " Seçildi",Snackbar.LENGTH_LONG).show()
         }
     }
 }

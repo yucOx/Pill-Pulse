@@ -5,6 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
@@ -25,17 +28,53 @@ class AddTimeActivity : AppCompatActivity() {
     private var database = FirebaseDatabase.getInstance()
     private var auth = FirebaseAuth.getInstance()
     lateinit var mAdView : AdView
+    private var pillDetails = ArrayList<PillTime>()
+    private var pastPills = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = AddTimeActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        pillDetails = intent.getSerializableExtra("pillDetails") as ArrayList<PillTime>
 
         setListenerForInputs()
         save()
 
         backToPrevious()
         initBannerAd(binding.adView)
+        selectFromPast()
+    }
+
+    private fun selectFromPast() {
+        var tempPillsLower = ArrayList<String>()
+
+        for(a in pillDetails){
+            if(a.drugName.lowercase() in tempPillsLower){
+                continue
+            }else{
+                pastPills.add(a.drugName.capitalize())
+                tempPillsLower.add(a.drugName.lowercase())
+            }
+        }
+        if(pastPills.isEmpty()){
+            pastPills.add("Daha önce kaydettiğiniz bir ilaç bulunamadı.")
+        }
+        var arrayAdapter = ArrayAdapter<String>(this@AddTimeActivity,android.R.layout.simple_list_item_1,pastPills)
+        binding.listView.adapter = arrayAdapter
+        binding.listView.setOnItemClickListener(object : AdapterView.OnItemClickListener{
+            override fun onItemClick(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                binding.pillNameText.setText(pastPills[p2])
+                binding.listView.visibility = View.GONE
+            }
+        })
+        binding.listView.visibility = View.GONE
+        binding.selectPastConst.setOnClickListener {
+            if(binding.listView.visibility == View.GONE){
+                binding.listView.visibility = View.VISIBLE
+            }else{
+                binding.listView.visibility = View.GONE
+            }
+        }
     }
 
     private fun initBannerAd(adView: AdView) {
