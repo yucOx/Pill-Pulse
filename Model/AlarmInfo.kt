@@ -1,4 +1,4 @@
-package com.yucox.pillpulse.model
+package com.yucox.pillpulse.Model
 
 import java.io.Serializable
 import java.util.Date
