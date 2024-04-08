@@ -4,11 +4,13 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.android.datatransport.runtime.scheduling.jobscheduling.SchedulerConfig.Flag
 import com.yucox.pillpulse.AlarmUtils
 import com.yucox.pillpulse.Repository.AlarmRepository
 import com.yucox.pillpulse.Repository.PillRepository
@@ -53,6 +55,7 @@ class AlarmViewModel : ViewModel() {
             MyReceiver::class.java
         )
         intent.putExtra("alarmInfo", _alarm.value)
+        println(_alarm.value)
         val pendingIntent = PendingIntent.getBroadcast(
             context.applicationContext,
             _alarm.value!!.requestCode,
@@ -60,7 +63,7 @@ class AlarmViewModel : ViewModel() {
             PendingIntent.FLAG_MUTABLE
         )
         try {
-            alarmManager.setExact(
+            alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
                 pendingIntent

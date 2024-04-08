@@ -1,10 +1,15 @@
 package com.yucox.pillpulse.View
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.FragmentContainer
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
@@ -13,30 +18,32 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.yucox.pillpulse.Model.AlarmInfo
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.ViewModel.AlarmViewModel
-import com.yucox.pillpulse.databinding.CreateAlarmActivityBinding
-import com.yucox.pillpulse.Model.AlarmInfo
+import com.yucox.pillpulse.databinding.FragmentCreateAlarmBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class CreateAlarm : AppCompatActivity() {
-    private lateinit var binding: CreateAlarmActivityBinding
+class CreateAlarmFragment : Fragment() {
+    private lateinit var binding: FragmentCreateAlarmBinding
     private lateinit var viewModel: AlarmViewModel
 
     private lateinit var calendar: Calendar
     private val auth = FirebaseAuth.getInstance()
-    private lateinit var mAdView: AdView
+    private lateinit var fragmentManager: FragmentManager
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = CreateAlarmActivityBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentCreateAlarmBinding.inflate(layoutInflater)
+
+        fragmentManager = parentFragmentManager
 
         calendar = Calendar.getInstance()
 
@@ -50,24 +57,18 @@ class CreateAlarm : AppCompatActivity() {
             showTimePicker()
         }
 
-        binding.backIv.setOnClickListener {
-            finish()
-        }
-
-        initBannerAd(binding.adView)
+        return binding.root
     }
-
     private fun setAlarm() {
         val key = FirebaseDatabase.getInstance()
             .getReference("Alarms")
             .push().key
 
-        val rootView = findViewById<View>(android.R.id.content)
         if (!binding.pillNameEt.text.toString().isBlank()) {
             if (calendar.timeInMillis <= System.currentTimeMillis()) {
                 calendar.add(Calendar.DAY_OF_YEAR, 1)
                 Toast.makeText(
-                    applicationContext,
+                    requireActivity().applicationContext,
                     "Hatırlatıcı yarına ayarlandı",
                     Toast.LENGTH_LONG
                 ).show()
@@ -89,7 +90,7 @@ class CreateAlarm : AppCompatActivity() {
                 viewModel.updateAlarm(alarm)
 
                 viewModel.setAlarm(
-                    this@CreateAlarm,
+                    requireActivity(),
                     calendar
                 )
 
@@ -100,20 +101,21 @@ class CreateAlarm : AppCompatActivity() {
 
                 if (result) {
                     Toast.makeText(
-                        applicationContext,
+                        requireActivity(),
                         "Hatırlatıcı ayarlandı",
                         Toast.LENGTH_LONG
                     ).show()
-                    finish()
+                    activity?.findViewById<RecyclerView>(R.id.listAlarmRv)?.visibility = View.VISIBLE
+                    fragmentManager.popBackStack()
                 }
             }
 
 
         } else {
-            Snackbar.make(
-                rootView,
+            Toast.makeText(
+                requireActivity(),
                 "İlaç ismini giriniz",
-                Snackbar.LENGTH_SHORT
+                Toast.LENGTH_SHORT
             ).show()
         }
     }
@@ -125,25 +127,17 @@ class CreateAlarm : AppCompatActivity() {
             .setMinute(calendar.get(Calendar.MINUTE))
             .setTitleText("İlacı içmeniz gerek saati giriniz.")
             .build()
-        picker.show(supportFragmentManager, "test")
+        picker.show(childFragmentManager, "test")
         picker.addOnPositiveButtonClickListener {
             calendar[Calendar.HOUR_OF_DAY] = picker.hour
             calendar[Calendar.MINUTE] = picker.minute
             val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
             val formattedTime = sdf.format(calendar.time)
-            val rootView = findViewById<View>(android.R.id.content)
-            Snackbar.make(
-                rootView,
+            Toast.makeText(
+                requireActivity(),
                 "$formattedTime Seçildi",
-                Snackbar.LENGTH_LONG
+                Toast.LENGTH_LONG
             ).show()
         }
-    }
-
-    private fun initBannerAd(adView: AdView) {
-        MobileAds.initialize(this) {}
-        mAdView = adView
-        val adRequest = AdRequest.Builder().build()
-        mAdView.loadAd(adRequest)
     }
 }

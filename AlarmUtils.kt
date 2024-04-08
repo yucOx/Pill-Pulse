@@ -18,6 +18,7 @@ class AlarmUtils(val context: Context) {
         calendar.set(Calendar.HOUR_OF_DAY, alarmInfo.alarmTime.hours)
         calendar.set(Calendar.MINUTE, alarmInfo.alarmTime.minutes)
         if (calendar.timeInMillis <= System.currentTimeMillis()) {
+            println("${alarmInfo.alarmTime} yarına ayarlandı")
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
@@ -25,17 +26,20 @@ class AlarmUtils(val context: Context) {
         intent.putExtra("alarmInfo", alarmInfo)
 
         val pendingIntent = PendingIntent.getBroadcast(
-            context.applicationContext, alarmInfo.requestCode, intent,
+            context.applicationContext,
+            alarmInfo.requestCode,
+            intent,
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_MUTABLE
         )
 
         try {
-            alarmManager.setExact(
+            alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
                 pendingIntent
             )
             println("kuruldu")
+            println(alarmInfo)
         } catch (e: SecurityException) {
             Toast.makeText(
                 context,

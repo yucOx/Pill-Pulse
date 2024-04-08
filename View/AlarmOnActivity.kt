@@ -41,7 +41,7 @@ class AlarmOnActivity : AppCompatActivity() {
             mp.stop()
         }
 
-        val sdf = SimpleDateFormat("hh:mm", Locale.getDefault())
+        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
         val formattedTime = sdf.format(alarmInfo.alarmTime)
 
         binding.showTimeTv.text = formattedTime.toString()

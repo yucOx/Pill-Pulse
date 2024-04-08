@@ -13,11 +13,19 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.MobileAds
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.hieupt.android.standalonescrollbar.attachTo
+import com.wynneplaga.materialScrollBar2.MaterialScrollBar
+import com.yucox.pillpulse.R
 import com.yucox.pillpulse.databinding.ActivityMainBinding
 import com.yucox.pillpulse.ViewModel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -36,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         loadingProcces()
+        initBannerAd()
 
         val requestPermissionLauncher = initRequestPermission(this)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
@@ -106,14 +115,15 @@ class MainActivity : AppCompatActivity() {
             this@MainActivity,
             viewModel.specifiedMonthPills
         )
-        binding.listPillsRecycler.layoutManager = LinearLayoutManager(
+        binding.listPillsRecycler.layoutManager = GridLayoutManager(
             this@MainActivity,
-            RecyclerView.VERTICAL,
-            false
+            2
         )
 
         binding.listPillsRecycler.adapter = adapter
         binding.scrollbar.attachTo(binding.listPillsRecycler)
+        binding.scrollbar.customThumbDrawable = getDrawable(R.drawable.customscrollbar)
+
     }
 
     private fun checkPermissions(
@@ -206,13 +216,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initBannerAd() {
+        MobileAds.initialize(this) {}
+        val adRequest = AdRequest.Builder().build()
+        binding.adView.loadAd(adRequest)
+    }
 
     private fun logOut() {
-        binding.logoutBtn.setOnClickListener {
-            viewModel.signOut()
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
+        binding.profileIv.setOnClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Çıkış yapmak istiyor musunuz?")
+                .setNegativeButton("Evet") { _, _ ->
+                    viewModel.signOut()
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
+                .setPositiveButton("Hayır") { _, _ -> }
+                .show()
         }
     }
 
