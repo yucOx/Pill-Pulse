@@ -15,7 +15,6 @@ import com.yucox.pillpulse.AlarmUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -27,6 +26,8 @@ class AlarmAdapter(
     RecyclerView.Adapter<AlarmAdapter.ViewHolder>() {
     private val _alarmRepository = AlarmRepository()
     private val _sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val dispatchersIO = CoroutineScope(Dispatchers.IO)
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -44,6 +45,7 @@ class AlarmAdapter(
             it.alarmTime.hours
         }
         val alarmInfo = sortedAlarmInfos[position]
+
         val formattedTime = _sdf.format(alarmInfo.alarmTime)
         holder.binding.time.text = formattedTime
         holder.binding.pillNameItemTv.text = alarmInfo.pillName
@@ -86,28 +88,27 @@ class AlarmAdapter(
                 .setTitle("Silmek istediğinze emin misiniz?")
                 .setMessage("Bu işlem geri alınamaz")
                 .setNegativeButton("Evet") { dialog, which ->
-                    deleteAndCloseAlarm(alarmInfo, position)
+                    deleteAndCloseAlarm(alarmInfo)
                 }
                 .setPositiveButton("Hayır") { dialog, which -> }
                 .show()
         }
     }
 
-    private fun deleteAndCloseAlarm(alarmInfo: AlarmInfo, position: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val result = _alarmRepository.deleteAlarmFromDatabase(
+    private fun deleteAndCloseAlarm(alarmInfo: AlarmInfo) {
+        dispatchersIO.launch {
+            val (result, exception) = _alarmRepository.deleteAlarmFromDatabase(
                 alarmInfo.alarmLocation.toString()
             )
-
             withContext(Dispatchers.Main) {
-                if (result.await()) {
+                if (result) {
                     AlarmUtils(context).deleteAndClose(alarmInfo)
                     alarmInfos.remove(alarmInfo)
                     notifyDataSetChanged()
                 } else {
                     Toast.makeText(
                         context,
-                        "Lütfen daha sonra tekrar deneyiniz",
+                        exception,
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -117,15 +118,46 @@ class AlarmAdapter(
 
     private fun closeTheAlarm(alarmInfo: AlarmInfo) {
         alarmInfo.onOrOff = 0
-        _alarmRepository.saveAsClosed(alarmInfo.alarmLocation.toString())
-        AlarmUtils(context).closeTheAlarm(alarmInfo)
+        dispatchersIO.launch {
+            val (result, exception) = _alarmRepository.saveAsClosed(
+                alarmInfo.alarmLocation.toString()
+            )
+            if (result) {
+                withContext(Dispatchers.Main) {
+                    AlarmUtils(context).closeTheAlarm(alarmInfo)
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        exception,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
     }
 
     private fun openTheAlarm(alarmInfo: AlarmInfo) {
         alarmInfo.onOrOff = 1
-        _alarmRepository.saveAsOpen(alarmInfo.alarmLocation.toString())
-        AlarmUtils(context).openTheAlarm(alarmInfo)
-
+        dispatchersIO.launch {
+            val (result, exception) = _alarmRepository.saveAsOpen(
+                alarmInfo.alarmLocation.toString()
+            )
+            if (result) {
+                withContext(Dispatchers.Main) {
+                    AlarmUtils(context).openTheAlarm(alarmInfo)
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        exception,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
     }
 
     class ViewHolder(val binding: ReminderItemv2Binding) : RecyclerView.ViewHolder(binding.root) {

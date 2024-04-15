@@ -47,7 +47,7 @@ class CreateAlarmFragment : Fragment() {
 
         calendar = Calendar.getInstance()
 
-        viewModel = ViewModelProvider(this).get(AlarmViewModel::class.java)
+        viewModel = ViewModelProvider(requireActivity()).get(AlarmViewModel::class.java)
 
         binding.setAlarmBtn.setOnClickListener {
             setAlarm()
@@ -59,12 +59,13 @@ class CreateAlarmFragment : Fragment() {
 
         return binding.root
     }
+
     private fun setAlarm() {
         val key = FirebaseDatabase.getInstance()
             .getReference("Alarms")
             .push().key
 
-        if (!binding.pillNameEt.text.toString().isBlank()) {
+        if (binding.pillNameEt.text.toString().isNotBlank()) {
             if (calendar.timeInMillis <= System.currentTimeMillis()) {
                 calendar.add(Calendar.DAY_OF_YEAR, 1)
                 Toast.makeText(
@@ -86,29 +87,22 @@ class CreateAlarmFragment : Fragment() {
                 1
             )
 
-            CoroutineScope(Dispatchers.Main).launch {
-                viewModel.updateAlarm(alarm)
+            viewModel.updateAlarm(alarm)
+            viewModel.setAlarm(
+                requireActivity(),
+                calendar
+            )
 
-                viewModel.setAlarm(
-                    requireActivity(),
-                    calendar
-                )
+            viewModel.savePillAlarm(key!!)
 
-                val result = viewModel.savePillAlarm(
-                    key!!,
-                    viewModel
-                )
-
-                if (result) {
-                    Toast.makeText(
-                        requireActivity(),
-                        "Hatırlatıcı ayarlandı",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    activity?.findViewById<RecyclerView>(R.id.listAlarmRv)?.visibility = View.VISIBLE
-                    fragmentManager.popBackStack()
-                }
-            }
+            Toast.makeText(
+                requireActivity(),
+                "Hatırlatıcı ayarlandı",
+                Toast.LENGTH_LONG
+            ).show()
+            activity?.findViewById<RecyclerView>(R.id.listAlarmRv)?.visibility =
+                View.VISIBLE
+            fragmentManager.popBackStack()
 
 
         } else {

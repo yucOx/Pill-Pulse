@@ -11,6 +11,8 @@ import com.yucox.pillpulse.Model.AlarmInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.lang.Exception
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -51,50 +53,43 @@ class AlarmRepository {
     }
 
 
-    fun saveAsOpen(
+    suspend fun saveAsOpen(
         alarmLocation: String
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
+    ): Pair<Boolean, String?> {
+        return try {
             val ref = _database.child(alarmLocation)
                 .child("onOrOff")
-            ref.setValue(1)
+            ref.setValue(1).await()
+            true to null
+        } catch (e: Exception) {
+            false to e.localizedMessage
+        }
+
+    }
+
+    suspend fun saveAsClosed(
+        alarmLocation: String
+    ): Pair<Boolean, String?> {
+        return try {
+            val ref = _database.child(alarmLocation)
+                .child("onOrOff")
+
+            ref.setValue(0).await()
+            true to null
+        } catch (e: Exception) {
+            false to e.localizedMessage
         }
     }
 
-    fun saveAsClosed(
+    suspend fun deleteAlarmFromDatabase(
         alarmLocation: String
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val ref = _database.child(alarmLocation)
-                .child("onOrOff")
-            ref.setValue(0)
-        }
-    }
-
-    fun saveRepeatingStatus(
-        alarmLocation: String,
-        repeating: Int
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
+    ): Pair<Boolean, String?> {
+        return try {
             _database.child(alarmLocation)
-                .child("repeating")
-                .setValue(repeating)
+                .removeValue().await()
+            true to null
+        } catch (e: Exception) {
+            false to e.localizedMessage
         }
-
-    }
-
-    fun deleteAlarmFromDatabase(
-        alarmLocation: String
-    ): Task<Boolean> {
-        val taskCompletionSource = TaskCompletionSource<Boolean>()
-        _database.child(alarmLocation)
-            .removeValue()
-            .addOnSuccessListener {
-                taskCompletionSource.setResult(true)
-            }
-            .addOnFailureListener {
-                taskCompletionSource.setResult(false)
-            }
-        return taskCompletionSource.task
     }
 }

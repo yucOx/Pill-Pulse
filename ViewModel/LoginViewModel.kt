@@ -3,9 +3,14 @@ package com.yucox.pillpulse.ViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.tasks.Task
+import androidx.lifecycle.viewModelScope
+import com.yucox.pillpulse.Messages.TRYSAVEAGAIN
+import com.yucox.pillpulse.Messages.UNEXPECTEDERROR
 import com.yucox.pillpulse.Repository.UserRepository
 import com.yucox.pillpulse.Model.UserInfo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LoginViewModel : ViewModel() {
     private val _user = MutableLiveData<UserInfo>()
@@ -13,17 +18,16 @@ class LoginViewModel : ViewModel() {
     private val _status = MutableLiveData<Int>()
     private val _error = MutableLiveData<String>()
 
-    val user: LiveData<UserInfo> = _user
-    val pass: LiveData<String> = _pass
     val status: LiveData<Int> = _status
     val error: LiveData<String> = _error
 
     private val _repository = UserRepository()
 
-    fun isAnyoneIn() : Int{
+    fun isAnyoneIn(): Int {
         return _repository.isAnyoneIn()
     }
-    fun updateErrorMessage(errorMessage: String) {
+
+    private fun updateErrorMessage(errorMessage: String) {
         _error.value = errorMessage
     }
 
@@ -32,20 +36,46 @@ class LoginViewModel : ViewModel() {
         _pass.value = userPass
     }
 
-    fun createNewAccount(viewModel: LoginViewModel) {
-        _repository.createAccount(viewModel)
+    fun createNewAccount() {
+        viewModelScope.launch {
+            val (result, exception) = withContext(Dispatchers.IO) {
+                _repository.createAccount(_user.value?.mail, _pass.value)
+            }
+            if (result) {
+                updateStatus(1)
+            } else {
+                updateErrorMessage(exception ?: UNEXPECTEDERROR)
+            }
+        }
     }
 
-    fun updateStatus(newStat: Int) {
+    private fun updateStatus(newStat: Int) {
         _status.value = newStat
     }
 
-    fun saveUserInfo(viewModel: LoginViewModel): Task<Boolean> {
-        return _repository.saveUserInfo(viewModel)
+    fun saveUserInfo() {
+        viewModelScope.launch {
+            val (result, exception) = withContext(Dispatchers.IO) {
+                _repository.saveUserInfo(_user.value!!)
+            }
+            if (!result) {
+                updateErrorMessage((exception) ?: (UNEXPECTEDERROR))
+                updateErrorMessage(TRYSAVEAGAIN)
+                saveUserInfo()
+            }
+        }
     }
 
-    fun logIn(viewModel : LoginViewModel){
-        _repository.takeMe(viewModel)
+    fun logIn() {
+        viewModelScope.launch {
+            val (result, errorMessage) = withContext(Dispatchers.IO) {
+                _repository.logInCheck(_user.value?.mail, _pass.value)
+            }
+            if (result) {
+                updateStatus(1)
+            } else {
+                updateErrorMessage(errorMessage ?: UNEXPECTEDERROR)
+            }
+        }
     }
-
 }

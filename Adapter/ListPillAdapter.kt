@@ -3,18 +3,21 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.wynneplaga.materialScrollBar2.MaterialScrollBar
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.Repository.PillRepository
 import com.yucox.pillpulse.Model.PillTime
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -32,6 +35,7 @@ class ListPillAdapter(
         "dd.MM.yyyy",
         Locale.getDefault()
     )
+    val dispatchersIO = CoroutineScope(Dispatchers.IO)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view =
@@ -71,11 +75,26 @@ class ListPillAdapter(
             builder.setTitle("Silmek istediğinize emin misiniz?")
                 .setMessage("Evet'e basarsanız bu işlem geri alınamaz.")
                 .setNegativeButton("Evet") { dialog, which ->
-                    pillRepository.deleteBill(pillInfo)
-                    pillList.value?.let {
-                        it.remove(pillInfo)
-                        notifyItemRemoved(position)
+                    dispatchersIO.launch {
+                        val (result, exception) = pillRepository.deletePill(pillInfo)
+                        if (result) {
+                            withContext(Dispatchers.Main) {
+                                pillList.value?.let {
+                                    it.remove(pillInfo)
+                                    notifyItemRemoved(position)
+                                }
+                            }
+                        } else {
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(
+                                    context,
+                                    exception,
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
                     }
+
                 }
                 .setPositiveButton("Hayır") { dialog, which -> }
                 .show()
@@ -94,26 +113,23 @@ class ListPillAdapter(
         bg: ConstraintLayout,
         deleteBtn: ImageView,
     ) {
-        bg.setOnLongClickListener(object : View.OnLongClickListener {
-            override fun onLongClick(p0: View?): Boolean {
-                if (deleteBtn.visibility == View.GONE) {
-                    deleteBtn.visibility = View.VISIBLE
+        bg.setOnLongClickListener {
+            if (deleteBtn.visibility == View.GONE) {
+                deleteBtn.visibility = View.VISIBLE
 
-                    val rootView = (context as Activity).findViewById<View>(android.R.id.content)
-                    Snackbar.make(
-                        rootView,
-                        "Notu değiştirmek için nota tıklayın",
-                        Snackbar.LENGTH_INDEFINITE
-                    )
-                        .setAction("Tamam") {}
-                        .show()
+                val rootView = (context as Activity).findViewById<View>(android.R.id.content)
+                Snackbar.make(
+                    rootView,
+                    "Notu değiştirmek için nota tıklayın",
+                    Snackbar.LENGTH_INDEFINITE
+                )
+                    .setAction("Tamam") {}
+                    .show()
 
-
-                } else {
-                    deleteBtn.visibility = View.GONE
-                }
-                return true
+            } else {
+                deleteBtn.visibility = View.GONE
             }
-        })
+            true
+        }
     }
 }

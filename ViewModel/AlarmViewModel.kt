@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.android.datatransport.runtime.scheduling.jobscheduling.SchedulerConfig.Flag
 import com.yucox.pillpulse.AlarmUtils
 import com.yucox.pillpulse.Repository.AlarmRepository
@@ -20,14 +21,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import java.util.Calendar
 
 class AlarmViewModel : ViewModel() {
     private val _alarm = MutableLiveData<AlarmInfo>()
     private val _alarmList = MutableLiveData<ArrayList<AlarmInfo>>()
+    private val _error = MutableLiveData<String>()
 
-    val alarm: LiveData<AlarmInfo> = _alarm
     val alarmList: LiveData<ArrayList<AlarmInfo>> = _alarmList
+    val error: LiveData<String> get() = _error
 
     fun updateAlarm(newAlarm: AlarmInfo) {
         _alarm.value = newAlarm
@@ -35,6 +38,16 @@ class AlarmViewModel : ViewModel() {
 
     private fun updateAlarmList(newAlarmList: ArrayList<AlarmInfo>) {
         _alarmList.value = newAlarmList
+    }
+
+    private fun addAlarmToList() {
+        _alarm.value?.let { alarm ->
+            val newList = _alarmList.value?.let {
+                ArrayList<AlarmInfo>(it)
+            }
+            newList?.add(alarm)
+            _alarmList.value = newList
+        }
     }
 
     fun reOpenAlarms(context: Context) {
@@ -55,7 +68,6 @@ class AlarmViewModel : ViewModel() {
             MyReceiver::class.java
         )
         intent.putExtra("alarmInfo", _alarm.value)
-        println(_alarm.value)
         val pendingIntent = PendingIntent.getBroadcast(
             context.applicationContext,
             _alarm.value!!.requestCode,
@@ -78,18 +90,32 @@ class AlarmViewModel : ViewModel() {
         }
     }
 
-    fun fetchAlarms(viewModel: AlarmViewModel) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val result = AlarmRepository().fetchAlarms()
-            withContext(Dispatchers.Main) {
-                updateAlarmList(result)
+    fun fetchAlarms() {
+        viewModelScope.launch {
+            try {
+                val result = AlarmRepository().fetchAlarms()
+                withContext(Dispatchers.Main) {
+                    updateAlarmList(result)
+                }
+            } catch (e: Exception) {
+                _error.value = e.localizedMessage
             }
+
         }
     }
 
-    suspend fun savePillAlarm(snapKey: String, viewModel: AlarmViewModel): Boolean {
-        return withContext(Dispatchers.IO) {
-            PillRepository().savePillAlarm(snapKey, viewModel)
+    fun savePillAlarm(snapKey: String) {
+        viewModelScope.launch {
+            val (result, exception) = withContext(Dispatchers.IO) {
+                PillRepository().savePillAlarm(snapKey, _alarm.value)
+            }
+
+            if (result) {
+                addAlarmToList()
+
+            } else {
+                _error.value = exception
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.android.gms.tasks.Task
 import com.yucox.pillpulse.PermissionUtils
 import com.yucox.pillpulse.Repository.PillRepository
@@ -19,10 +20,12 @@ class MainViewModel : ViewModel() {
     private val _user = MutableLiveData<UserInfo>()
     private val _pillList = MutableLiveData<ArrayList<PillTime>>()
     private val _specifiedMonthPills = MutableLiveData<ArrayList<PillTime>>()
+    private val _saveCheck = MutableLiveData<Boolean>()
 
     val user: LiveData<UserInfo> = _user
     val pillList: LiveData<ArrayList<PillTime>> = _pillList
     val specifiedMonthPills: LiveData<ArrayList<PillTime>> = _specifiedMonthPills
+    val saveCheck: LiveData<Boolean> get() = _saveCheck
 
     private val userRepository = UserRepository()
     private val pillRepository = PillRepository()
@@ -33,29 +36,25 @@ class MainViewModel : ViewModel() {
         return permissionUtils.hasPermission(context)
     }
 
-    fun updateUser(newUser: UserInfo) {
-        _user.value = newUser
-    }
-
     fun updatePillList(pillsInfo: ArrayList<PillTime>) {
         _pillList.value = pillsInfo
     }
 
-    fun fetchUserInfo(viewModel: MainViewModel) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val fetchedData = userRepository.fetchMainUserInfo(viewModel)
-            withContext(Dispatchers.Main) {
-                updateUser(fetchedData)
+    fun fetchUserInfo() {
+        viewModelScope.launch {
+            val user = withContext(Dispatchers.IO) {
+                userRepository.fetchMainUserInfo()
             }
+            _user.value = user
         }
     }
 
-    fun fetchPills(viewModel: MainViewModel) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val fetchedData = pillRepository.fetchPillsInfo(viewModel)
-            withContext(Dispatchers.Main) {
-                updatePillList(fetchedData)
+    fun fetchPills() {
+        viewModelScope.launch {
+            val pills = withContext(Dispatchers.IO) {
+                pillRepository.fetchPillsInfo()
             }
+            updatePillList(pills)
         }
     }
 
@@ -63,11 +62,16 @@ class MainViewModel : ViewModel() {
         userRepository.signOut()
     }
 
-    fun saveNewPill(pill: String, note: String): Task<Boolean> {
-        return pillRepository.saveNewPill(pill, note)
+    fun saveNewPill(pill: String, note: String) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                pillRepository.saveNewPill(pill, note)
+            }
+            _saveCheck.value = result
+        }
     }
 
-    fun listAllYear(){
+    fun listAllYear() {
         _specifiedMonthPills.value = _pillList.value
     }
 

@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -25,11 +26,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.hieupt.android.standalonescrollbar.attachTo
 import com.wynneplaga.materialScrollBar2.MaterialScrollBar
+import com.yucox.pillpulse.ConstValues
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.databinding.ActivityMainBinding
 import com.yucox.pillpulse.ViewModel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -49,9 +52,9 @@ class MainActivity : AppCompatActivity() {
         val requestPermissionLauncher = initRequestPermission(this)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
-        viewModel.fetchUserInfo(viewModel)
+        viewModel.fetchUserInfo()
 
-        viewModel.fetchPills(viewModel)
+        viewModel.fetchPills()
 
         viewModel.pillList.observe(this@MainActivity) {
             if (it.isNotEmpty()) {
@@ -64,6 +67,8 @@ class MainActivity : AppCompatActivity() {
         viewModel.specifiedMonthPills.observe(this@MainActivity) {
             if (it.isNotEmpty()) {
                 initRecycler()
+                binding.bigFrameCl.visibility = View.VISIBLE
+                binding.navBarCl.visibility = View.VISIBLE
                 binding.progressBar2.visibility = View.GONE
             }
         }
@@ -84,6 +89,8 @@ class MainActivity : AppCompatActivity() {
 
 
         binding.addTimeBtn.setOnClickListener {
+            if(viewModel.pillList.value.isNullOrEmpty())
+                return@setOnClickListener
             val intent = Intent(this, AddTimeActivity::class.java)
             intent.putExtra("pillDetails", viewModel.pillList.value)
             startActivity(intent)
@@ -99,7 +106,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun listByMonth() {
         val adapter =
-            ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, months)
+            ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, ConstValues.months)
         binding.listItemAutoComplete.setAdapter(adapter)
         binding.listItemAutoComplete.setOnItemClickListener { _, _, selectedIndex, _ ->
             if (selectedIndex == 12) {
@@ -239,8 +246,9 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun loadingProcces() {
+        val mainScope = CoroutineScope(Dispatchers.Main)
         binding.progressBar2.progress += 10
-        CoroutineScope(Dispatchers.Main).launch {
+        mainScope.launch {
             if (binding.progressBar2.progress < 100 && binding.progressBar2.visibility == View.VISIBLE) {
                 delay(300)
                 loadingProcces()
@@ -248,31 +256,21 @@ class MainActivity : AppCompatActivity() {
             } else {
                 binding.progressBar2.progress = 80
             }
+            mainScope.cancel()
         }
     }
 
     override fun onRestart() {
         binding.progressBar2.visibility = View.VISIBLE
         loadingProcces()
-        viewModel.fetchPills(viewModel)
+        viewModel.fetchPills()
         super.onRestart()
     }
 
-    companion object {
-        private val months = arrayOf(
-            "Ocak",
-            "Şubat",
-            "Mart",
-            "Nisan",
-            "Mayıs",
-            "Haziran",
-            "Temmuz",
-            "Ağustos",
-            "Eylül",
-            "Ekim",
-            "Kasım",
-            "Aralık",
-            "Hepsini göster"
-        )
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.viewModelScope.cancel()
+        adapter.dispatchersIO.cancel()
     }
 }

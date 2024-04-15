@@ -5,18 +5,18 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import androidx.fragment.app.FragmentManager
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.Adapter.AlarmAdapter
 import com.yucox.pillpulse.databinding.AddReminderActivityBinding
 import com.yucox.pillpulse.ViewModel.AlarmViewModel
+import kotlinx.coroutines.cancel
 
 class AddReminderActivity : AppCompatActivity() {
     private lateinit var binding: AddReminderActivityBinding
@@ -33,7 +33,15 @@ class AddReminderActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this).get(AlarmViewModel::class.java)
 
-        viewModel.fetchAlarms(viewModel)
+        viewModel.error.observe(this) {
+            Toast.makeText(
+                this,
+                it,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        viewModel.fetchAlarms()
 
         viewModel.alarmList.observe(this@AddReminderActivity) {
             if (it.isNotEmpty()) {
@@ -107,13 +115,9 @@ class AddReminderActivity : AppCompatActivity() {
                 false
             )
         binding.listAlarmRv.adapter = listAlarmAdapter
+        listAlarmAdapter.notifyDataSetChanged()
     }
 
-
-    override fun onRestart() {
-        viewModel.fetchAlarms(viewModel)
-        super.onRestart()
-    }
 
     override fun onBackPressed() {
         if (supportFragmentManager.findFragmentById(R.id.addAlarmFragment) != null) {
@@ -122,5 +126,10 @@ class AddReminderActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        listAlarmAdapter.dispatchersIO.cancel()
     }
 }

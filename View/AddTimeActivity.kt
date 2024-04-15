@@ -4,19 +4,16 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
+import com.yucox.pillpulse.Messages.UNEXPECTEDERROR
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.databinding.AddTimeActivityBinding
 import com.yucox.pillpulse.ViewModel.MainViewModel
 import com.yucox.pillpulse.Model.PillTime
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 
 class AddTimeActivity : AppCompatActivity() {
     private lateinit var binding: AddTimeActivityBinding
@@ -35,18 +32,23 @@ class AddTimeActivity : AppCompatActivity() {
 
         selectFromPast()
 
-        binding.saveBtn.setOnClickListener {
-            CoroutineScope(Dispatchers.IO).launch {
-                if (viewModel.saveNewPill(
-                        binding.pillNameText.text.toString(),
-                        binding.noteEt.text.toString(),
-                    ).await()
-                ) {
-                    withContext(Dispatchers.Main) {
-                        finish()
-                    }
-                }
+        viewModel.saveCheck.observe(this) {
+            if (it) {
+                finish()
+            } else {
+                Toast.makeText(
+                    this,
+                    UNEXPECTEDERROR,
+                    Toast.LENGTH_LONG
+                ).show()
             }
+        }
+
+        binding.saveBtn.setOnClickListener {
+            viewModel.saveNewPill(
+                binding.pillNameText.text.toString(),
+                binding.noteEt.text.toString(),
+            )
         }
 
         binding.backIv.setOnClickListener {
@@ -79,7 +81,7 @@ class AddTimeActivity : AppCompatActivity() {
 
     private fun selectFromPast() {
         if (pillDetails.isEmpty()) {
-            viewModel.fetchPills(viewModel)
+            viewModel.fetchPills()
             viewModel.pillList.observe(this) {
                 if (it.isNullOrEmpty()) {
                     pastPills.add("Daha önce kaydettiğiniz bir ilaç bulunamadı.")
@@ -101,5 +103,9 @@ class AddTimeActivity : AppCompatActivity() {
         mAdView = adView
         val adRequest = AdRequest.Builder().build()
         mAdView.loadAd(adRequest)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }

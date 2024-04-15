@@ -4,17 +4,19 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.yucox.pillpulse.ViewModel.LoginViewModel
 import com.yucox.pillpulse.databinding.RegisterActivityBinding
 import com.yucox.pillpulse.Model.UserInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class RegisterActivity : AppCompatActivity() {
     private lateinit var binding: RegisterActivityBinding
     private lateinit var viewModel: LoginViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = RegisterActivityBinding.inflate(layoutInflater)
@@ -24,14 +26,12 @@ class RegisterActivity : AppCompatActivity() {
 
         viewModel.status.observe(this) { isSuccessful ->
             if (isSuccessful == 1) {
-                CoroutineScope(Dispatchers.Main).launch {
-                    viewModel.saveUserInfo(viewModel).await()
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Hesap oluşturuldu, giriş yapabilirsin",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                viewModel.saveUserInfo()
+                Toast.makeText(
+                    this@RegisterActivity,
+                    "Hesap oluşturuldu, giriş yapabilirsin",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 
@@ -39,7 +39,7 @@ class RegisterActivity : AppCompatActivity() {
             if (it != null) {
                 Toast.makeText(
                     this,
-                    "$it",
+                    it,
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -64,11 +64,20 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             viewModel.updateUser(UserInfo(name, surname, mail), password)
-            viewModel.createNewAccount(viewModel)
+            viewModel.createNewAccount()
         }
 
         binding.registerToLogin.setOnClickListener {
             finish()
         }
+
+        binding.backToLoginPage.setOnClickListener {
+            finish()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.viewModelScope.cancel()
     }
 }

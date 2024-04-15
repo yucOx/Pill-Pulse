@@ -94,18 +94,15 @@ class CreateAlarm : AppCompatActivity() {
                 )
 
                 val result = viewModel.savePillAlarm(
-                    key!!,
-                    viewModel
+                    key!!
                 )
 
-                if (result) {
-                    Toast.makeText(
-                        applicationContext,
-                        "Hatırlatıcı ayarlandı",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    finish()
-                }
+                Toast.makeText(
+                    applicationContext,
+                    "Hatırlatıcı ayarlandı",
+                    Toast.LENGTH_LONG
+                ).show()
+                finish()
             }
 
 

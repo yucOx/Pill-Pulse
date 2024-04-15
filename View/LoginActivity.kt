@@ -5,9 +5,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.yucox.pillpulse.ViewModel.LoginViewModel
 import com.yucox.pillpulse.databinding.LoginActivityBinding
 import com.yucox.pillpulse.Model.UserInfo
+import kotlinx.coroutines.cancel
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: LoginActivityBinding
@@ -65,12 +67,17 @@ class LoginActivity : AppCompatActivity() {
             }
 
             viewModel.updateUser(UserInfo("", "", mail), pass)
-            viewModel.logIn(viewModel)
+            viewModel.logIn()
         }
 
         binding.letmetoRegister.setOnClickListener {
             val intent = Intent(this@LoginActivity, RegisterActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.viewModelScope.cancel()
     }
 }

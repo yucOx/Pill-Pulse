@@ -2,14 +2,18 @@ package com.yucox.pillpulse.Repository
 
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.TaskCompletionSource
+import com.google.android.play.core.integrity.e
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.yucox.pillpulse.ViewModel.LoginViewModel
-import com.yucox.pillpulse.ViewModel.MainViewModel
 import com.yucox.pillpulse.Model.UserInfo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import java.lang.Exception
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -19,7 +23,7 @@ class UserRepository {
     private val _auth = FirebaseAuth.getInstance()
     private val _mainUserMail = _auth.currentUser?.email.toString()
 
-    suspend fun fetchMainUserInfo(viewModel: MainViewModel): UserInfo {
+    suspend fun fetchMainUserInfo(): UserInfo {
         return suspendCoroutine { continuation ->
             _database.getReference("UserInfo")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -44,7 +48,6 @@ class UserRepository {
                     }
                 })
         }
-
     }
 
     fun signOut() {
@@ -57,40 +60,33 @@ class UserRepository {
         else 0
     }
 
-    fun takeMe(viewModel: LoginViewModel) {
-        val mail = viewModel.user.value?.mail
-        val pass = viewModel.pass.value
-        _auth.signInWithEmailAndPassword(mail!!, pass!!)
-            .addOnSuccessListener {
-                viewModel.updateStatus(1)
-            }
-            .addOnFailureListener {
-                viewModel.updateErrorMessage(it.message.toString())
-            }
-    }
-
-    fun createAccount(viewModel: LoginViewModel) {
-        val mail = viewModel.user.value?.mail.toString()
-        val pass = viewModel.pass.value.toString()
-        _auth.createUserWithEmailAndPassword(mail, pass)
-            .addOnSuccessListener {
-                viewModel.updateStatus(1)
-            }
-            .addOnFailureListener {
-                viewModel.updateErrorMessage(it.message.toString())
-            }
-    }
-
-    fun saveUserInfo(viewModel: LoginViewModel): Task<Boolean> {
-        val taskCompletionSource = TaskCompletionSource<Boolean>()
-        val database = FirebaseDatabase.getInstance()
-        val ref = database.getReference("UserInfo")
-        ref.setValue(viewModel.user).addOnCompleteListener {
-            if (it.isSuccessful)
-                taskCompletionSource.setResult(true)
-            else
-                taskCompletionSource.setResult(false)
+    suspend fun logInCheck(mail: String?, pass: String?): Pair<Boolean, String?> {
+        return try {
+            _auth.signInWithEmailAndPassword(mail!!, pass!!).await()
+            true to null
+        } catch (e: Exception) {
+            false to e.localizedMessage
         }
-        return taskCompletionSource.task
+    }
+
+    suspend fun createAccount(mail: String?, pass: String?): Pair<Boolean, String?> {
+        return try {
+            _auth.createUserWithEmailAndPassword(mail.toString(), pass.toString()).await()
+            true to null
+        } catch (e: Exception) {
+            false to e.localizedMessage
+        }
+    }
+
+    suspend fun saveUserInfo(user: UserInfo): Pair<Boolean, String?> {
+        return try {
+            val database = FirebaseDatabase.getInstance()
+            val ref = database.getReference("UserInfo")
+            ref.push().setValue(user).await()
+            true to null
+
+        } catch (e: Exception) {
+            false to e.localizedMessage
+        }
     }
 }

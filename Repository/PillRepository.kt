@@ -7,12 +7,10 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.yucox.pillpulse.ViewModel.AlarmViewModel
-import com.yucox.pillpulse.ViewModel.MainViewModel
+import com.yucox.pillpulse.Model.AlarmInfo
 import com.yucox.pillpulse.Model.PillTime
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.lang.Exception
 import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -24,7 +22,6 @@ class PillRepository {
     private val _mainUserMail = _auth.currentUser?.email.toString()
 
     suspend fun fetchPillsInfo(
-        viewModel: MainViewModel
     ): ArrayList<PillTime> {
         return suspendCoroutine { continuation ->
             val tempPillList = ArrayList<PillTime>()
@@ -61,51 +58,45 @@ class PillRepository {
         }
     }
 
-    fun changePillNote(pillInfo: PillTime, note: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+    suspend fun deletePill(pillInfo: PillTime): Pair<Boolean, String?> {
+        return try {
             _database.getReference("Pills")
                 .child(pillInfo.key)
-                .child("note")
-                .setValue(note)
+                .removeValue().await()
+            true to null
+        } catch (e: Exception) {
+            false to e.localizedMessage
         }
     }
 
-    fun deleteBill(pillInfo: PillTime) {
-        _database.getReference("Pills")
-            .child(pillInfo.key)
-            .removeValue()
-    }
-
-    fun saveNewPill(pill: String, note: String): Task<Boolean> {
-        val taskCompletionSource = TaskCompletionSource<Boolean>()
-        val ref = _database.getReference("Pills").push()
-        val key = ref.key.toString()
-        var newPill = PillTime()
-        if (note.isBlank()) {
-            newPill = PillTime(
-                pill,
-                "Not almadınız.",
-                Date(),
-                _mainUserMail,
-                key
-            )
-        } else {
-            newPill = PillTime(
-                pill,
-                "Not almadınız.",
-                Date(),
-                _mainUserMail,
-                key
-            )
-        }
-        ref.setValue(newPill).addOnCompleteListener {
-            if (it.isSuccessful) {
-                taskCompletionSource.setResult(true)
+    suspend fun saveNewPill(pill: String, note: String): Boolean {
+        return suspendCoroutine { Continuation ->
+            val ref = _database.getReference("Pills").push()
+            val key = ref.key.toString()
+            var newPill = PillTime()
+            if (note.isBlank()) {
+                newPill = PillTime(
+                    pill,
+                    "Not almadınız.",
+                    Date(),
+                    _mainUserMail,
+                    key
+                )
             } else {
-                taskCompletionSource.setResult(false)
+                newPill = PillTime(
+                    pill,
+                    "Not almadınız.",
+                    Date(),
+                    _mainUserMail,
+                    key
+                )
+            }
+            ref.setValue(newPill).addOnSuccessListener {
+                Continuation.resume(true)
+            }.addOnFailureListener {
+                Continuation.resume(false)
             }
         }
-        return taskCompletionSource.task
     }
 
     fun savePillWithSpecifiedTime(pill: PillTime, location: String): Task<Boolean> {
@@ -122,17 +113,13 @@ class PillRepository {
         return taskCompletionSource.task
     }
 
-    suspend fun savePillAlarm(key: String, viewModel: AlarmViewModel): Boolean {
-        return suspendCoroutine { continuation ->
+    suspend fun savePillAlarm(key: String, alarm: AlarmInfo?): Pair<Boolean, String?> {
+        return try {
             val ref = _database.getReference("Alarms")
-            ref.child(key).setValue(viewModel.alarm.value)
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        continuation.resume(true)
-                    } else {
-                        continuation.resume(false)
-                    }
-                }
+            ref.child(key).setValue(alarm).await()
+            true to null
+        } catch (e: Exception) {
+            false to e.localizedMessage
         }
     }
 }
