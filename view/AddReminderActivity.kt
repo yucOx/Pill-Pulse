@@ -11,11 +11,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.adapter.AlarmAdapter
@@ -31,25 +27,16 @@ class AddReminderActivity : AppCompatActivity() {
     private lateinit var binding: AddReminderActivityBinding
     private val viewModel: AlarmViewModel by viewModels()
     private lateinit var listAlarmAdapter: AlarmAdapter
-    private var mInterstitialAd: InterstitialAd? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = AddReminderActivityBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        loadAds()
+        setupUI()
+        setupObservers()
         initBannerAd()
-        infoAboutAlarm()
 
-        viewModel.screenControl.observe(this) {
-            if (it == true) {
-                binding.screenCl.isClickable = true
-            } else {
-                binding.screenCl.isClickable = false
-            }
-        }
+    }
 
-
+    private fun setupObservers() {
         viewModel.message.observe(this) {
             if (it.isEmpty())
                 return@observe
@@ -68,11 +55,12 @@ class AddReminderActivity : AppCompatActivity() {
                 viewModel.reOpenAlarms(this@AddReminderActivity)
             }
         }
+    }
 
-        binding.headerContent.btnBackChartCont.setOnClickListener {
-            finish()
-        }
-
+    private fun setupUI() {
+        binding = AddReminderActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        askPermissions()
         binding.goToCreateAlarmBtn.setOnClickListener {
             val fragmentTransaction = supportFragmentManager.beginTransaction()
             val isFragmentDisplayed = supportFragmentManager.findFragmentById(R.id.addAlarmFragment)
@@ -83,16 +71,18 @@ class AddReminderActivity : AppCompatActivity() {
                 binding.addAlarmFragment.visibility = View.VISIBLE
                 fragmentTransaction.commit()
             }
-
         }
 
         binding.headerContent.permissionBtn.setOnClickListener {
             startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
         }
 
+        binding.headerContent.btnBackChartCont.setOnClickListener {
+            finish()
+        }
     }
 
-    private fun infoAboutAlarm() {
+    private fun askPermissions() {
         val sharedPreferences = getSharedPreferences("checkPermission", MODE_PRIVATE)
         val editor = sharedPreferences.edit()
 
@@ -113,7 +103,6 @@ class AddReminderActivity : AppCompatActivity() {
                 }
                 .show()
         }
-
     }
 
     private fun initBannerAd() {
@@ -147,41 +136,6 @@ class AddReminderActivity : AppCompatActivity() {
             )
         binding.listAlarmRv.adapter = listAlarmAdapter
         listAlarmAdapter.notifyDataSetChanged()
-    }
-
-    private fun loadAds() {
-        val adRequest = AdRequest.Builder().build()
-        InterstitialAd.load(
-            this,
-            "ca-app-pub-5841174734258930/8252179828",
-            adRequest,
-            object : InterstitialAdLoadCallback() {
-                override fun onAdFailedToLoad(adError: LoadAdError) {
-                    mInterstitialAd = null
-                    loadAds()
-                }
-
-                override fun onAdLoaded(interstitialAd: InterstitialAd) {
-                    println("yüklendi")
-                    mInterstitialAd = interstitialAd
-                }
-            })
-    }
-
-    private fun showAds() {
-        if (mInterstitialAd == null)
-            loadAds()
-        mInterstitialAd?.show(this)
-        mInterstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() {
-                mInterstitialAd = null
-                loadAds()
-            }
-
-            override fun onAdShowedFullScreenContent() {
-                loadAds()
-            }
-        }
     }
 
     override fun onBackPressed() {

@@ -9,12 +9,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.yucox.pillpulse.model.PillRealm
 import com.yucox.pillpulse.R
+import com.yucox.pillpulse.model.Pill
+import com.yucox.pillpulse.util.TimeUtils
 import org.mongodb.kbson.ObjectId
 
 class ListPillAdapter(
     private val context: Context,
-    private val pillList: MutableList<PillRealm>,
-    private val removePill: (id: ObjectId) -> Unit,
+    var pillList: MutableList<Pill>,
+    private val removePill: (id: String) -> Unit
 ) :
     RecyclerView.Adapter<ListPillAdapter.ViewHolder>() {
 
@@ -33,12 +35,11 @@ class ListPillAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val sortedPillList = pillList.sortedByDescending { it.tokeTime }
-        val pill = sortedPillList[position]
+        val pill = pillList[position]
 
         holder.pillName.text = pill.drugName
-        holder.takenTime.text = pill.tokeTime
-        holder.takenDate.text = pill.tokeDate
+        holder.takenTime.text = pill.whenYouTookHour
+        holder.takenDate.text = pill.whenYouTookDate
 
         holder.deleteBtn.setOnClickListener {
             val builder = MaterialAlertDialogBuilder(context)

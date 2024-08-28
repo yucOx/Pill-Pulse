@@ -9,19 +9,19 @@ import androidx.appcompat.app.AppCompatActivity
 import com.yucox.pillpulse.receiver.MyReceiver
 import com.yucox.pillpulse.model.AlarmInfo
 import com.yucox.pillpulse.model.AlarmRealm
-import com.yucox.pillpulse.util.TimeUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
 class AlarmUtils(val context: Context) {
     private val alarmManager =
         context.getSystemService(AppCompatActivity.ALARM_SERVICE) as AlarmManager
+    private val _shf = SimpleDateFormat("HH:mm")
 
     fun openTheAlarm(alarmRealm: AlarmRealm) {
         val calendar = Calendar.getInstance()
         if (alarmRealm.alarmTime.isNullOrEmpty())
             return
-        val time = TimeUtils.toDateClock(alarmRealm.alarmTime)
+        val time = _shf.parse(alarmRealm.alarmTime)
         calendar.set(Calendar.HOUR_OF_DAY, time.hours)
         calendar.set(Calendar.MINUTE, time.minutes)
 
@@ -93,7 +93,7 @@ class AlarmUtils(val context: Context) {
         if (alarmRealm.alarmTime.isNullOrEmpty())
             return
 
-        val time = TimeUtils.toDateClock(alarmRealm.alarmTime)
+        val time = _shf.parse(alarmRealm.alarmTime)
 
         calendar.set(Calendar.HOUR_OF_DAY, time.hours)
         calendar.set(Calendar.MINUTE, time.minutes)

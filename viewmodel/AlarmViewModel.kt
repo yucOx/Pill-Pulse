@@ -16,7 +16,6 @@ import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.firebase.auth.FirebaseAuth
 import com.yucox.pillpulse.utils.AlarmUtils
-import com.yucox.pillpulse.repository.FirebaseAlarmRepository
 import com.yucox.pillpulse.model.AlarmInfo
 import com.yucox.pillpulse.model.AlarmRealm
 import com.yucox.pillpulse.receiver.MyReceiver
@@ -33,44 +32,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AlarmViewModel @Inject constructor(
-    private val _alarmRepository: FirebaseAlarmRepository,
     private val _localeAlarmRepository: LocaleAlarmRepository,
     private val _auth: FirebaseAuth
 ) : ViewModel() {
+    var calendar = java.util.Calendar.getInstance()
+
     private val _message = MutableLiveData<String>()
+    val message: LiveData<String> get() = _message
+
     private val _alarm = MutableLiveData<AlarmInfo>()
     private val _alarmRealm = MutableLiveData<AlarmRealm>()
-    private val _screenControl = MutableLiveData<Boolean>()
 
-    val message: LiveData<String> get() = _message
     var rmAlarmList: LiveData<List<AlarmRealm>> = _localeAlarmRepository.fetchAlarms()
-    var calendar = java.util.Calendar.getInstance()
-    val screenControl: LiveData<Boolean> get() = _screenControl
-
-    fun synchronizeData() {
-        viewModelScope.launch {
-            _screenControl.value = false
-            val localeIdList = mutableListOf<String>()
-            val alarmObjects = mutableListOf<AlarmInfo>()
-
-            val tempAlarmList = rmAlarmList.value
-            tempAlarmList?.forEach { alarmRealm ->
-                val alarmObject = convertToAlarmObject(alarmRealm)
-                alarmObjects.add(alarmObject)
-                localeIdList.add(alarmRealm.id.toHexString())
-            }
-            val response = withContext(Dispatchers.IO) {
-                _alarmRepository.synchronizeData(localeIdList, alarmObjects)
-            }
-
-            response.forEach {
-                val convertedObject = convertToRealmAlarmObject(it)
-                createNewAlarmLocale(convertedObject)
-            }
-            _screenControl.value = true
-            messageChannel("Senkronize başarılı")
-        }
-    }
 
     fun initAlarmObjects(
         pillName: String,
@@ -103,9 +76,7 @@ class AlarmViewModel @Inject constructor(
         messageChannel("Hatırlatıcı yarına ayarlandı")
     }
 
-    fun setAlarm(
-        context: Context,
-    ) {
+    fun setAlarm(context: Context) {
         if (calendar.timeInMillis <= System.currentTimeMillis())
             delayToAlarm()
 
@@ -160,7 +131,6 @@ class AlarmViewModel @Inject constructor(
     fun deleteAlarmLocale(alarmId: ObjectId) {
         viewModelScope.launch {
             _localeAlarmRepository.removeAlarm(alarmId)
-            _alarmRepository.deleteAlarmFromDatabase(alarmId.toHexString())
         }
     }
 
@@ -174,30 +144,5 @@ class AlarmViewModel @Inject constructor(
         viewModelScope.launch {
             _localeAlarmRepository.changeAlarmStatus(alarmId)
         }
-    }
-
-    private fun convertToRealmAlarmObject(alarm: AlarmInfo): AlarmRealm {
-        val alarmRealm = AlarmRealm().apply {
-            this.alarmDate = TimeUtils.toStringCalendar(alarm.alarmTime)
-            this.alarmTime = TimeUtils.toStringClock(alarm.alarmTime)
-            this.pillName = alarm.pillName
-            this.userMail = alarm.userMail
-            this.onOrOff = alarm.onOrOff
-            this.requestCode = alarm.requestCode
-            this.id = ObjectId(alarm.alarmLocation.toString())
-        }
-        return alarmRealm
-    }
-
-    private fun convertToAlarmObject(localAlarm: AlarmRealm): AlarmInfo {
-        val shf = SimpleDateFormat("HH:mm")
-        return AlarmInfo(
-            pillName = localAlarm.pillName,
-            alarmTime = shf.parse(localAlarm.alarmTime ?: "") ?: Date(),
-            requestCode = localAlarm.requestCode,
-            repeating = 1,
-            userMail = localAlarm.userMail,
-            alarmLocation = localAlarm.id.toHexString()
-        )
     }
 }

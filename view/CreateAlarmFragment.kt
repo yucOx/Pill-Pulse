@@ -14,7 +14,6 @@ import com.google.android.material.timepicker.TimeFormat
 import com.yucox.pillpulse.R
 import com.yucox.pillpulse.viewmodel.AlarmViewModel
 import com.yucox.pillpulse.databinding.FragmentCreateAlarmBinding
-import com.yucox.pillpulse.util.TimeUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.cancel
 import java.text.SimpleDateFormat
@@ -30,8 +29,12 @@ class CreateAlarmFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentCreateAlarmBinding.inflate(layoutInflater)
+        setupUI()
+        setupObservers()
+        return binding.root
+    }
 
+    private fun setupObservers() {
         viewModel.message.observe(requireActivity()) {
             if (it.isNotEmpty()) {
                 Toast.makeText(
@@ -41,7 +44,10 @@ class CreateAlarmFragment : Fragment() {
                 ).show()
             }
         }
+    }
 
+    private fun setupUI() {
+        binding = FragmentCreateAlarmBinding.inflate(layoutInflater)
         binding.setAlarmBtn.setOnClickListener {
             setAlarm()
         }
@@ -49,17 +55,11 @@ class CreateAlarmFragment : Fragment() {
         binding.selectTimeBtn.setOnClickListener {
             showTimePicker()
         }
-        return binding.root
-
     }
 
     private fun setAlarm() {
         if (binding.pillNameEt.text.toString().isBlank()) {
-            Toast.makeText(
-                requireActivity(),
-                "İlaç ismini giriniz",
-                Toast.LENGTH_SHORT
-            ).show()
+            sendMessage("İlaç ismini giriniz")
             return
         }
 
@@ -75,6 +75,14 @@ class CreateAlarmFragment : Fragment() {
         parentFragmentManager.popBackStack()
     }
 
+    private fun sendMessage(message: String) {
+        Toast.makeText(
+            requireActivity(),
+            message,
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
     private fun showTimePicker() {
         val tempCalendar = Calendar.getInstance()
         val picker = MaterialTimePicker.Builder()
@@ -87,18 +95,10 @@ class CreateAlarmFragment : Fragment() {
         picker.addOnPositiveButtonClickListener {
             tempCalendar[Calendar.HOUR_OF_DAY] = picker.hour
             tempCalendar[Calendar.MINUTE] = picker.minute
-            val formattedTime = TimeUtils.toStringClock(tempCalendar.time)
-            Toast.makeText(
-                requireActivity(),
-                "$formattedTime Seçildi",
-                Toast.LENGTH_LONG
-            ).show()
+            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val formattedTime = sdf.format(tempCalendar.time)
+            sendMessage("$formattedTime Seçildi")
         }
         viewModel.calendar = tempCalendar
-    }
-
-    override fun onDestroy() {
-        viewModel.viewModelScope.cancel()
-        super.onDestroy()
     }
 }

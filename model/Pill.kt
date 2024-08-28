@@ -3,11 +3,12 @@ package com.yucox.pillpulse.model
 import java.io.Serializable
 import java.util.Date
 
-data class PillTime(
+data class Pill(
+    var id: String = "",
     val drugName: String = "",
-    var note: String = "",
-    val whenYouTook: Date = Date(),
+    val whenYouTookHour: String? = "",
+    val whenYouTookDate: String? = "",
     val userMail: String = "",
-    var key: String = ""
+    val month: String? = null,
 ) : Serializable {
 }
