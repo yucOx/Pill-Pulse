@@ -18,7 +18,7 @@ import io.realm.kotlin.RealmConfiguration
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
-        
+
 @InstallIn(SingletonComponent::class)
 @Module
 object DatabaseModule {
@@ -26,7 +26,7 @@ object DatabaseModule {
     @Provides
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://IP_ADRESS/")
+            .baseUrl("http://85.105.201.173:9091/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

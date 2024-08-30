@@ -9,25 +9,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.firebase.auth.FirebaseAuth
 import com.yucox.pillpulse.utils.AlarmUtils
 import com.yucox.pillpulse.model.AlarmInfo
 import com.yucox.pillpulse.model.AlarmRealm
-import com.yucox.pillpulse.receiver.MyReceiver
+import com.yucox.pillpulse.model.MyReceiver
 import com.yucox.pillpulse.repository.LocaleAlarmRepository
 import com.yucox.pillpulse.util.TimeUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.mongodb.kbson.ObjectId
-import java.text.SimpleDateFormat
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel

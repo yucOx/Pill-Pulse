@@ -10,19 +10,20 @@ import android.media.MediaPlayer
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.yucox.pillpulse.R
-import com.yucox.pillpulse.utils.AlarmUtils
 import com.yucox.pillpulse.view.AlarmOnActivity
+import com.yucox.pillpulse.utils.AlarmUtils
 
 
 class MyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val alarmInfo = intent?.getSerializableExtra("alarmInfo") as AlarmInfo
+
         Toast.makeText(context, "Alarm çalıyor", Toast.LENGTH_SHORT).show()
         createNotificationChannel(context!!)
         val mp: MediaPlayer = MediaPlayer.create(context, R.raw.alarm_sound)
         mp.start()
-        val openAlarmOrClose = AlarmUtils(context.applicationContext)
-        openAlarmOrClose.openTheAlarm(alarmInfo)
+
+        AlarmUtils(context.applicationContext).openTheAlarm(alarmInfo)
 
         val notificationIntent = Intent(context, AlarmOnActivity::class.java)
         notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -49,6 +50,7 @@ class MyReceiver : BroadcastReceiver() {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(random, builder.build())
+
         Toast.makeText(context, "Alarm çalıyor", Toast.LENGTH_LONG).show()
     }
 

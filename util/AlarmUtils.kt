@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.yucox.pillpulse.receiver.MyReceiver
+import com.yucox.pillpulse.model.MyReceiver
 import com.yucox.pillpulse.model.AlarmInfo
 import com.yucox.pillpulse.model.AlarmRealm
 import java.text.SimpleDateFormat
