@@ -25,7 +25,7 @@ object DatabaseModule {
     @Provides
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://85.105.201.173:9091/")
+            .baseUrl("http://**.13*.**.***:***1/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
